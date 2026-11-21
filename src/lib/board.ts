@@ -120,6 +120,7 @@ export function createIssue(bd: Board, n: NewIssue, by: Actor, now = Date.now())
 
 /** Readable value of an issue field, for the history log. */
 export function describe(bd: Board, field: string, value: unknown): string {
+  if (field === 'sprint' && value === null) return 'Backlog';
   if (value === null || value === undefined || value === '') return 'None';
   switch (field) {
     case 'status': return STATUSES.find((s) => s.id === value)?.label ?? String(value);

@@ -81,6 +81,9 @@ describe('sprints', () => {
     expect(done.sprint).toBe(s1.id);
     expect(open.sprint).toBe(s2.id);
     expect(open.history.at(-1)).toMatchObject({ field: 'sprint', from: 'WORK Sprint 1', to: 'WORK Sprint 2' });
+    const later = createIssue(bd, { project: 'WORK', title: 'c' }, 'me', T);
+    updateIssue(bd, later, 'sprint', s2.id, 'me', T);
+    expect(later.history.at(-1)).toMatchObject({ from: 'Backlog', to: 'WORK Sprint 2' });
   });
 
   it('moves unfinished issues to the backlog when the target is in another project', () => {

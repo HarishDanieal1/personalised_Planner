@@ -134,7 +134,8 @@ test('board: plan a sprint, work an issue and see its history', async ({ page, i
     await page.locator('.tcard').first().focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed status from “To do” to “In progress”');
-    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed assignee from “None” to “AI”');
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed assignee from “Me” to “AI”');
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed sprint from “Backlog” to “PER Sprint 1”');
     await page.locator('wa-dialog[open]').getByText('Close', { exact: true }).click();
   }
   await shot(page, 'board');
