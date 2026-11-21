@@ -1,6 +1,7 @@
 # Mention @claude in an issue, a pull request comment or a review to have Claude
 # answer, investigate or make the change on a branch.
-# Needs: the Claude GitHub App on this repo and an ANTHROPIC_API_KEY repository secret.
+# Needs: the Claude GitHub App on this repo and one repository secret:
+# CLAUDE_CODE_OAUTH_TOKEN (your Claude subscription; run `claude setup-token`) or ANTHROPIC_API_KEY.
 # Only people with write access to the repo can trigger it (the action's default).
 name: Claude
 
@@ -34,13 +35,14 @@ jobs:
       id-token: write
       actions: read
     steps:
-      - name: Check that the Anthropic API key secret is set
+      - name: Check that a Claude credential is set
         id: key
         env:
+          OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [ -n "$KEY" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
-          else echo "::notice::Skipped: add the ANTHROPIC_API_KEY repository secret to turn on Claude."; fi
+          if [ -n "$OAUTH" ] || [ -n "$KEY" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Skipped: add a CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY repository secret to turn on Claude."; fi
       - if: steps.key.outputs.ok == 'true'
         uses: actions/checkout@v6
         with:
@@ -48,6 +50,8 @@ jobs:
       - if: steps.key.outputs.ok == 'true'
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Your Claude subscription token is used when set; otherwise the API key.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
           allow_fork_prs: "false"
-          claude_args: "--max-turns 30"
+          claude_args: "--model claude-sonnet-5-5 --max-turns 30"

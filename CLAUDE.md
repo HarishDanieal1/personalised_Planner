@@ -48,6 +48,22 @@ A change is done when `npm run check` passes. Add or update tests for any logic 
 - Write copy from the person's side of the screen: sentence case, plain verbs, buttons that say what happens ("Add block", not "Submit"). No filler, no emoji, no "A · B" meta strings, no decorative eyebrows or numbering.
 - Check desktop (1440px), phone (390px), keyboard focus and `prefers-reduced-motion`.
 
+## Models and cost
+
+Pick the cheapest model that can do the job, and save the strongest models for decisions that are hard to undo.
+
+| Work | Model |
+| --- | --- |
+| Routine edits, renames, copy changes, tests, docs, lookups across the repo | Claude Haiku 5.5 (`claude-haiku-5-5`) |
+| Normal feature work, bug fixes, pull request reviews (the default) | Claude Sonnet 5.5 (`claude-sonnet-5-5`) |
+| Architecture, data model and sync changes, security review, anything touching people's data | Claude Opus 5.5 (`claude-opus-5-5`), or Sonnet with an Opus advisor |
+
+- **Advisor tool for long agent runs.** For multi-step work (coding agents, research, the future AI-agent section of the app), run a cheaper executor and give it an advisor: tool `{"type": "advisor_20260301", "name": "advisor", "model": "claude-opus-5-5"}` with beta header `advisor-tool-2026-03-01`. Most tokens are billed at the executor's rate and the advisor is billed only for its short advice. Good pairs: Sonnet 5.5 executing with an Opus 5.5 advisor (similar or lower cost than Sonnet alone on hard tasks); Haiku 5.5 executing with an Opus 5.5 advisor (costs more than Haiku alone, less than moving up a model). Call the advisor after the first few reads and once more before declaring done. Cap it with `max_uses` (for example 3) and `max_tokens: 2048` on the advisor. Turn on advisor `caching` only for runs with three or more advisor calls.
+- **Don't use the advisor for single-turn requests,** such as the app's "Plan my day" call or a one-shot question. It adds cost without helping there. Planner's own day planning uses one model per request (Sonnet 5.5 by default; Haiku 5.5 for the cheapest plans).
+- **Keep requests small.** Send only the data the task needs, cap `max_tokens`, and reuse long fixed prompts with prompt caching when the same prefix repeats.
+- **GitHub agents.** `@claude` runs and pull request reviews use Sonnet 5.5. They authenticate with the repo owner's Claude subscription token (`CLAUDE_CODE_OAUTH_TOKEN`) when it's set, otherwise an API key (`ANTHROPIC_API_KEY`). Keep `--max-turns` limits in the workflows.
+- **Billing.** A Claude subscription covers Claude apps and Claude Code, including the GitHub agents through the subscription token. Calls made by the app itself (with a person's own API key) are API usage, billed by the Claude Console.
+
 ## Pull requests
 
 Describe what changed and how you tested it, including anything you couldn't test. Keep `main` deployable.

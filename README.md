@@ -74,9 +74,11 @@ Both follow the rules in [CLAUDE.md](CLAUDE.md). Only people with write access t
 To turn them on in your copy:
 
 1. Install the Claude GitHub App on the repository: https://github.com/apps/claude
-2. In the repository, go to **Settings → Secrets and variables → Actions → New repository secret**, name it `ANTHROPIC_API_KEY`, and paste a key from [console.anthropic.com](https://console.anthropic.com).
+2. Add one repository secret under **Settings → Secrets and variables → Actions → New repository secret**:
+   - `CLAUDE_CODE_OAUTH_TOKEN` to run on your Claude subscription (Pro, Max, Team or Enterprise). Get it by running `claude setup-token` in Claude Code on your computer. Best for a personal repo.
+   - or `ANTHROPIC_API_KEY`, a key from [console.anthropic.com](https://console.anthropic.com), billed as API usage.
 
-Until the secret exists, both workflows skip with a notice.
+Until one of these secrets exists, both workflows skip with a notice. See "Models and cost" in [CLAUDE.md](CLAUDE.md) for which model each kind of work uses.
 
 ## Project layout
 
