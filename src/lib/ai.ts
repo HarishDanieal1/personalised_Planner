@@ -21,6 +21,17 @@ export const setModel = (id: string): void => localStorage.setItem(MODEL_STORAGE
 
 export class ClaudeError extends Error {}
 
+/** Titles of active-sprint issues for me (or unassigned) with the given status, highest priority first. */
+function boardList(board: Board, status: 'todo' | 'doing', max: number): string[] {
+  const order = ['highest', 'high', 'medium', 'low', 'lowest'];
+  const active = new Set((board.sprints ?? []).filter((s) => s.state === 'active').map((s) => s.id));
+  return (board.issues ?? [])
+    .filter((i) => i.status === status && i.type !== 'epic' && i.assignee !== 'ai' && i.sprint !== null && active.has(i.sprint))
+    .sort((a, b) => order.indexOf(a.priority) - order.indexOf(b.priority))
+    .map((i) => `${i.key} ${i.title}`.slice(0, 120))
+    .slice(0, max);
+}
+
 export function buildPlanPrompt(day: Day, date: string, settings: Settings, board: Board, notes: string, nowMin: number | null): string {
   const data = {
     date,
@@ -30,8 +41,8 @@ export function buildPlanPrompt(day: Day, date: string, settings: Settings, boar
     topPriorities: day.priorities.filter((p) => p.text.trim() && !p.done).map((p) => p.text.trim()),
     brainDump: day.dump.filter((d) => !d.done && !d.blocked).map((d) => d.text.trim()).filter(Boolean),
     existingBlocks: day.blocks.map((b) => ({ start: hm(b.start), minutes: b.dur, text: b.text })),
-    boardInProgress: board.cards.filter((c) => c.col === 'doing').map((c) => c.title).slice(0, 8),
-    boardToDo: board.cards.filter((c) => c.col === 'todo').map((c) => c.title).slice(0, 10),
+    boardInProgress: boardList(board, 'doing', 8),
+    boardToDo: boardList(board, 'todo', 10),
     trackers: settings.trackers.map((t) => ({ id: t.id, name: t.name, type: t.kind === 'limit' ? 'daily limit' : 'daily target', minutes: t.goal })),
     habits: settings.habits.map((h) => h.name),
     userNotes: notes.slice(0, 500)

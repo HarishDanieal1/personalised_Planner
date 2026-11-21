@@ -1,27 +1,44 @@
 /*
   Planner design tokens.
-  Layout idea: a cloud-console workspace. White top bar, rectangular left navigation,
-  quiet grey canvas, white cards with hairline borders. One blue accent for actions
-  and the current page; chart colours come from the validated dataviz palette.
+  Look: glass, after Apple's design language. Translucent top bar and sidebar over a
+  softly lit canvas, frosted cards with hairline edges, the system font, one blue
+  accent. In dark mode the canvas is deep space with a faint nebula glow.
+  Chart colours come from the validated dataviz palette; never reuse them for status.
 */
 @layer planner-tokens {
   :root {
     color-scheme: light;
-    --pl-canvas: #f8fafd;
-    --pl-surface: #ffffff;
-    --pl-surface-sunken: #f1f3f4;
-    --pl-border: #dadce0;
-    --pl-border-strong: #bdc1c6;
-    --pl-text: #1f1f1f;
-    --pl-text-2: #444746;
-    --pl-text-3: #5f6368;
-    --pl-accent: #0b57d0;
-    --pl-accent-soft: #e8f0fe;
-    --pl-accent-on-soft: #0842a0;
-    --pl-critical: #b3261e;
-    --pl-critical-soft: #fce8e6;
-    --pl-good: #146c2e;
-    --pl-focus: #0b57d0;
+    --pl-canvas: #f2f2f7;
+    --pl-canvas-glow-1: rgba(0, 122, 255, 0.10);
+    --pl-canvas-glow-2: rgba(175, 82, 222, 0.08);
+    --pl-surface: rgba(255, 255, 255, 0.72);
+    --pl-surface-solid: #ffffff;
+    --pl-surface-sunken: rgba(118, 118, 128, 0.10);
+    --pl-chrome: rgba(250, 250, 252, 0.72);
+    --pl-border: rgba(60, 60, 67, 0.14);
+    --pl-border-strong: rgba(60, 60, 67, 0.29);
+    --pl-highlight: rgba(255, 255, 255, 0.9);
+    --pl-text: #1d1d1f;
+    --pl-text-2: #3a3a3c;
+    --pl-text-3: #6e6e73;
+    --pl-accent: #0071e3;
+    --pl-accent-soft: rgba(0, 113, 227, 0.12);
+    --pl-accent-on-soft: #0058b0;
+    --pl-critical: #d70015;
+    --pl-critical-soft: rgba(255, 59, 48, 0.12);
+    --pl-good: #248a3d;
+    --pl-warning: #b25000;
+    --pl-purple: #8944ab;
+    --pl-focus: #0071e3;
+    --pl-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+    --pl-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.12);
+    --pl-blur: saturate(180%) blur(24px);
+
+    /* Logo: the living core. */
+    --logo-core: #7af0ff;
+    --logo-mid: #2f7bff;
+    --logo-deep: #1b1464;
+    --logo-ring: #8fb6ff;
 
     /* Chart palette (dataviz reference instance, light steps). */
     --chart-surface: #ffffff;
@@ -35,19 +52,21 @@
     --series-8: #e34948;
     --chart-critical: #d03b3b;
 
-    --pl-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --pl-topbar-h: 64px;
-    --pl-nav-w: 256px;
-    --pl-radius-card: 8px;
+    --pl-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', sans-serif;
+    --pl-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', sans-serif;
+    --pl-topbar-h: 60px;
+    --pl-nav-w: 260px;
+    --pl-radius-card: 16px;
+    --pl-radius-control: 10px;
     --pl-gap: 16px;
 
     /* Web Awesome tokens, aligned to the above. */
     --wa-font-family-body: var(--pl-font);
-    --wa-font-family-heading: var(--pl-font);
+    --wa-font-family-heading: var(--pl-font-display);
     --wa-font-family-longform: var(--pl-font);
-    --wa-color-surface-default: var(--pl-surface);
-    --wa-color-surface-raised: var(--pl-surface);
-    --wa-color-surface-lowered: var(--pl-surface-sunken);
+    --wa-color-surface-default: var(--pl-surface-solid);
+    --wa-color-surface-raised: var(--pl-surface-solid);
+    --wa-color-surface-lowered: #ececf1;
     --wa-color-surface-border: var(--pl-border);
     --wa-color-text-normal: var(--pl-text);
     --wa-color-text-quiet: var(--pl-text-3);
@@ -56,32 +75,50 @@
     --wa-color-brand-on-normal: var(--pl-accent);
     --wa-color-brand-fill-quiet: var(--pl-accent-soft);
     --wa-color-brand-on-quiet: var(--pl-accent-on-soft);
+    --wa-form-control-background-color: rgba(255, 255, 255, 0.8);
     --wa-form-control-border-color: var(--pl-border-strong);
-    --wa-form-control-border-radius: 4px;
+    --wa-form-control-border-radius: var(--pl-radius-control);
     --wa-form-control-activated-color: var(--pl-accent);
-    --wa-border-radius-m: 8px;
+    --wa-border-radius-s: 8px;
+    --wa-border-radius-m: 10px;
+    --wa-border-radius-l: 14px;
     --wa-focus-ring-color: var(--pl-focus);
+    --wa-panel-border-radius: 18px;
   }
 
   :root.wa-dark {
     color-scheme: dark;
-    --pl-canvas: #1b1c1d;
-    --pl-surface: #232426;
-    --pl-surface-sunken: #2c2d30;
-    --pl-border: #3c4043;
-    --pl-border-strong: #5f6368;
-    --pl-text: #e3e3e3;
-    --pl-text-2: #c4c7c5;
-    --pl-text-3: #a8abaf;
-    --pl-accent: #a8c7fa;
-    --pl-accent-soft: #0e3a6e;
-    --pl-accent-on-soft: #d3e3fd;
-    --pl-critical: #f2b8b5;
-    --pl-critical-soft: #601410;
-    --pl-good: #6dd58c;
-    --pl-focus: #a8c7fa;
+    --pl-canvas: #05060c;
+    --pl-canvas-glow-1: rgba(47, 123, 255, 0.20);
+    --pl-canvas-glow-2: rgba(140, 82, 255, 0.14);
+    --pl-surface: rgba(30, 32, 40, 0.62);
+    --pl-surface-solid: #1c1d24;
+    --pl-surface-sunken: rgba(118, 118, 128, 0.20);
+    --pl-chrome: rgba(16, 17, 24, 0.66);
+    --pl-border: rgba(235, 235, 245, 0.12);
+    --pl-border-strong: rgba(235, 235, 245, 0.24);
+    --pl-highlight: rgba(255, 255, 255, 0.08);
+    --pl-text: #f5f5f7;
+    --pl-text-2: #d1d1d6;
+    --pl-text-3: #a1a1a8;
+    --pl-accent: #3d9bff;
+    --pl-accent-soft: rgba(10, 132, 255, 0.22);
+    --pl-accent-on-soft: #a9d1ff;
+    --pl-critical: #ff6961;
+    --pl-critical-soft: rgba(255, 69, 58, 0.20);
+    --pl-good: #30d158;
+    --pl-warning: #ffb340;
+    --pl-purple: #da8fff;
+    --pl-focus: #64b0ff;
+    --pl-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --pl-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.5);
 
-    --chart-surface: #232426;
+    --logo-core: #a6f6ff;
+    --logo-mid: #3d8bff;
+    --logo-deep: #2a1d8f;
+    --logo-ring: #a9c6ff;
+
+    --chart-surface: #1c1d24;
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
@@ -91,6 +128,22 @@
     --series-7: #9085e9;
     --series-8: #e66767;
     --chart-critical: #e66767;
-    --wa-color-brand-on-loud: #062e6f;
+
+    --wa-color-surface-lowered: #26272f;
+    /* Filled buttons use a deeper blue so white labels keep 4.5:1 contrast. */
+    --wa-color-brand-fill-loud: #0a6fe0;
+    --wa-color-brand-border-loud: #0a6fe0;
+    --wa-color-brand-on-loud: #ffffff;
+    --wa-form-control-background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Without backdrop blur, glass would be hard to read: use solid surfaces. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root { --pl-surface: #ffffff; --pl-chrome: #fafafc; }
+    :root.wa-dark { --pl-surface: #1c1d24; --pl-chrome: #101118; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    :root { --pl-surface: #ffffff; --pl-chrome: #fafafc; }
+    :root.wa-dark { --pl-surface: #1c1d24; --pl-chrome: #101118; }
   }
 }

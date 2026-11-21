@@ -17,13 +17,35 @@ test('opens on the dashboard with every metric in its own card', async ({ page }
   await shot(page, 'dashboard-empty');
 });
 
-test('navigation reaches every page', async ({ page, isMobile }) => {
+test('navigation reaches every page, with collapsible groups', async ({ page, isMobile }) => {
   await page.goto('/');
-  for (const [label, heading] of [['Day', /day,/i], ['Week', /Week of/], ['Month', /\d{4}$/], ['Board', 'Board'], ['Reset', 'Reset'], ['Settings', 'Settings'], ['Dashboard', 'Dashboard']] as const) {
-    if (isMobile) await page.locator('[data-toggle-nav]').click();
-    await page.locator(`.sidenav a[data-page="${label.toLowerCase()}"]`).click();
+  const open = async () => { if (isMobile) await page.locator('[data-toggle-nav]').click(); };
+  for (const [id, heading] of [['day', /day,/i], ['week', /Week of/], ['month', /\d{4}$/], ['year', /^\d{4}$/], ['board', 'Board'], ['reset', 'Reset'], ['settings', 'Settings'], ['dashboard', 'Dashboard']] as const) {
+    await open();
+    await page.locator(`.sidenav a[data-page="${id}"]`).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
   }
+  // Financial starts collapsed; opening it reveals its pages.
+  await open();
+  const toggle = page.locator('[data-group="financial"] .nav-group-toggle');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await page.locator('.sidenav a[data-page="fin-budget"]').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Budget');
+  await expect(page.getByText('These are sample numbers')).toBeVisible();
+  await shot(page, 'financial-budget');
+});
+
+test('the left navigation stays in place while the page scrolls', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'On phones the navigation is a drawer');
+  await page.goto('/#year');
+  const settings = page.locator('.sidenav a[data-page="settings"]');
+  const before = (await settings.boundingBox())!.y;
+  await page.mouse.wheel(0, 1500);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
+  expect(Math.abs((await settings.boundingBox())!.y - before)).toBeLessThan(2);
+  await shot(page, 'year');
 });
 
 test('day: priorities, brain dump and a time block feed the dashboard', async ({ page, isMobile }) => {
@@ -69,24 +91,60 @@ test('day: drag a brain dump item onto the schedule', async ({ page, isMobile })
   await shot(page, 'day');
 });
 
-test('board: add cards and drag one to In progress', async ({ page, isMobile }) => {
-  await page.goto('/#board');
+test('board: plan a sprint, work an issue and see its history', async ({ page, isMobile }) => {
+  await page.goto('/#board/backlog');
   for (const t of ['Write weekly report', 'Plan next sprint']) {
-    await page.locator('#add-todo').click();
+    await page.locator('#quick-add-PER').click();
     await page.keyboard.type(t);
     await page.keyboard.press('Enter');
   }
-  await expect(page.locator('[data-drop="col:todo"] .tcard')).toHaveCount(2);
+  await expect(page.locator('[data-drop="sprint:backlog:PER"] .issue-row')).toHaveCount(2);
+  await expect(page.locator('.issue-row .key').first()).toHaveText('PER-1');
+
+  // Create a sprint and move PER-1 into it through the issue dialog (works with keyboard and touch).
+  const personal = page.locator('.project-block').first();
+  await personal.getByText('Create sprint').click();
+  await page.locator('.issue-row', { hasText: 'Write weekly report' }).click();
+  const dialog = page.locator('wa-dialog[open]');
+  await dialog.locator('wa-select[label="Sprint"]').click();
+  await page.locator('wa-option', { hasText: 'PER Sprint 1' }).click();
+  await dialog.locator('wa-select[label="Assignee"]').click();
+  await page.locator('wa-option', { hasText: /^AI$/ }).click();
+  await dialog.getByText('Save', { exact: true }).click();
+  await expect(page.locator('[data-drop^="sprint:"][data-drop$=":PER"]:not([data-drop^="sprint:backlog"]) .issue-row')).toHaveCount(1);
+
+  await personal.getByText('Start sprint').click();
+  await page.locator('.segmented button', { hasText: 'Sprint board' }).click();
+  await expect(page.locator('[data-drop="status:todo"] .tcard')).toHaveCount(1);
   if (!isMobile) {
     const card = (await page.locator('.tcard').first().boundingBox())!;
-    const target = (await page.locator('[data-drop="col:doing"]').boundingBox())!;
+    const target = (await page.locator('[data-drop="status:doing"]').boundingBox())!;
     await page.mouse.move(card.x + 80, card.y + 20);
     await page.mouse.down();
     await page.mouse.move(target.x + 80, target.y + 30, { steps: 10 });
     await page.mouse.up();
-    await expect(page.locator('[data-drop="col:doing"] .tcard')).toHaveCount(1);
+    await expect(page.locator('[data-drop="status:doing"] .tcard')).toHaveCount(1);
+    await page.locator('.tcard').first().click();
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed status from “To do” to “In progress”');
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed assignee from “None” to “AI”');
+    await page.locator('wa-dialog[open]').getByText('Close', { exact: true }).click();
   }
   await shot(page, 'board');
+});
+
+test('board: filters narrow the backlog', async ({ page }) => {
+  await page.goto('/#board/backlog');
+  await page.locator('#quick-add-WORK').click();
+  await page.keyboard.type('Fix login bug');
+  await page.keyboard.press('Enter');
+  await page.locator('#quick-add-PER').click();
+  await page.keyboard.type('Buy groceries');
+  await page.keyboard.press('Enter');
+  await page.locator('.board-filters .chip', { hasText: 'Work' }).click();
+  await expect(page.locator('.issue-row')).toHaveCount(1);
+  await expect(page.locator('.issue-row')).toContainText('WORK-1');
+  await page.getByText('Clear filters').click();
+  await expect(page.locator('.issue-row')).toHaveCount(2);
 });
 
 test('week: matrix items and habit ticks are saved', async ({ page }) => {

@@ -3,7 +3,8 @@ import { h, icon, checkedOf } from '../lib/dom';
 import { addDays, diffDays, fmtMinutes, h12, longDate, mondayOf, shortDate, today, WEEKDAYS_SHORT, fromIso } from '../lib/dates';
 import { dayScore, trackerMinutes } from '../lib/planner';
 import { barChart } from '../lib/charts';
-import { board, day, reset, saveDay, settings, startTimer, stopTimer, trackerColor } from '../app/state';
+import { day, reset, saveDay, settings, startTimer, stopTimer, trackerColor } from '../app/state';
+import { loadBoard } from './board';
 import { card, pageHead } from '../app/ui';
 import { rerender } from '../app/shell';
 import type { Day, Settings, Tracker } from '../lib/types';
@@ -151,13 +152,17 @@ function weekCard(t: string, s: Settings): HTMLElement {
 }
 
 function boardCard(): HTMLElement {
-  const cards = board().cards;
-  const count = (c: string): number => cards.filter((x) => x.col === c).length;
-  const doing = cards.filter((x) => x.col === 'doing');
+  const bd = loadBoard();
+  const active = new Set(bd.sprints.filter((s) => s.state === 'active').map((s) => s.id));
+  const inSprint = bd.issues.filter((i) => i.sprint !== null && active.has(i.sprint) && i.type !== 'epic');
+  const count = (st: string): number => inSprint.filter((i) => i.status === st).length;
+  const doing = inSprint.filter((i) => i.status === 'doing');
   return card('Board', [
     h('div', { class: 'metric' }, String(doing.length), h('small', null, 'in progress')),
-    h('p', { class: 'metric-note' }, `${count('todo')} to do, ${count('backlog')} in backlog, ${count('done')} done`),
-    doing.length ? h('ul', { class: 'list', style: 'margin-top:8px' }, doing.slice(0, 4).map((c) => h('li', { style: 'padding:4px 0;border-bottom:1px solid var(--pl-border)' }, c.title))) : null
+    h('p', { class: 'metric-note' }, active.size
+      ? `${count('todo')} to do, ${count('review')} in review, ${count('done')} done this sprint. ${bd.issues.filter((i) => i.sprint === null).length} in the backlog.`
+      : `No sprint running. ${bd.issues.filter((i) => i.sprint === null).length} issues in the backlog.`),
+    doing.length ? h('ul', { class: 'list', style: 'margin-top:8px' }, doing.slice(0, 4).map((c) => h('li', { style: 'padding:4px 0;border-bottom:1px solid var(--pl-border)' }, `${c.key} ${c.title}`))) : null
   ], { actions: [link('#board', 'Open board')] });
 }
 

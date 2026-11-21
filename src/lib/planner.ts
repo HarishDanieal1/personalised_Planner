@@ -26,6 +26,15 @@ export function dayScore(day: Day, settings: Settings): Score {
   return { score: weight ? Math.round((total / weight) * 100) : null, pr: pr.length, prDone, bl, blDone, hb, hbDone };
 }
 
+/** Shade for a day on the Year page: 0 when nothing was planned, then 1-4 by quarter of the score. */
+export function scoreLevel(score: number | null): 0 | 1 | 2 | 3 | 4 {
+  if (score === null) return 0;
+  if (score >= 75) return 4;
+  if (score >= 50) return 3;
+  if (score >= 25) return 2;
+  return 1;
+}
+
 /** Snap a block: 30 minutes on a half hour, or whole hours on the hour. */
 export function snapBlock(startMin: number, minutes: number): { start: number; dur: number } {
   if (minutes <= 30) return { start: Math.floor(startMin / 30) * 30, dur: 30 };
