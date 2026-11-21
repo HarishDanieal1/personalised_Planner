@@ -130,7 +130,9 @@ test('board: plan a sprint, work an issue and see its history', async ({ page, i
     await page.mouse.move(target.x + 80, target.y + 30, { steps: 10 });
     await page.mouse.up();
     await expect(page.locator('[data-drop="status:doing"] .tcard')).toHaveCount(1);
-    await page.locator('.tcard').first().click();
+    // A click right after a drag is ignored on purpose, so open the card with the keyboard.
+    await page.locator('.tcard').first().focus();
+    await page.keyboard.press('Enter');
     await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed status from “To do” to “In progress”');
     await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed assignee from “None” to “AI”');
     await page.locator('wa-dialog[open]').getByText('Close', { exact: true }).click();
