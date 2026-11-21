@@ -99,6 +99,12 @@ export function renderFinance(id: string): Node[] {
 const totalSpent = CATEGORIES.reduce((a, c) => a + c[1], 0);
 const totalBudget = CATEGORIES.reduce((a, c) => a + c[2], 0);
 
+/** Sample numbers for the dashboard cards. Fictional, like everything on the Financial pages. */
+export function financeSummary(): { netWorth: number; netWorthChange: number; spent: number; budget: number } {
+  return { netWorth: NET_WORTH[11], netWorthChange: NET_WORTH[11] - NET_WORTH[10], spent: totalSpent, budget: totalBudget };
+}
+export const formatMoney = (n: number): string => money(n);
+
 const BODY: Record<string, () => Node[]> = {
   'fin-overview': () => [
     card('Net worth', [

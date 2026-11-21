@@ -1,6 +1,6 @@
 # Planner
 
-An open-source personal planner: time-block your day, sort the week by urgency and importance, set monthly and yearly goals, run Personal and Work projects on a Jira-style board shared with the AI, and track habits and time (focus, gaming, cooking, exercise or your own). A dashboard shows every metric as its own card. Optional Claude day planning and Supabase sync.
+An open-source personal planner: time-block your day, sort the week by urgency and importance, set monthly and yearly goals, run Personal and Work projects on a Jira-style board shared with the AI, and track habits and time (focus, gaming, cooking, exercise or your own). A dashboard shows every area as its own cards. Optional Claude day planning and Supabase sync.
 
 It runs in the browser and installs as an app on Windows, macOS, Linux, Android and iOS (it's a progressive web app). It works offline; with an account it syncs across devices.
 
@@ -10,7 +10,8 @@ Day, Week, Month, Year and Reset sit in the **Planner** group of the left naviga
 
 | Page | What it's for |
 | --- | --- |
-| Dashboard | Today's productivity score, priorities, time blocks, habits, one card per time tracker, this week, the board and days steady. |
+| Dashboard | One view across every area: today, this week and year, the board, money (sample data) and days steady. |
+| Progress | Today's productivity score, priorities, time blocks, habits, one card per time tracker, this week, the board and days steady. Sits first in the Planner group. |
 | Day | Top 3 priorities, a brain dump, and a schedule from early morning to night. Drag down the grid to block hours, click a half hour for 30 minutes, drag brain-dump items onto the grid. |
 | Week | Weekly notes, an urgent/important matrix with drag and drop, the habit tracker and a self-care line. |
 | Month | A theme for the month, three goals and a calendar with a note per day. |
@@ -90,7 +91,7 @@ Until one of these secrets exists, both workflows skip with a notice. See "Model
 src/
   main.ts            entry: styles, components, start
   app/               shell (top bar, navigation, router, search), shared state, theme, UI helpers
-  pages/             one file per page: dashboard, day, week, month, year, reset, board, finance, settings
+  pages/             one file per page: dashboard, progress, day, week, month, year, reset, board, finance, settings
   lib/               logic without UI: dates, planner rules, board rules, local store, Supabase sync, Claude, charts, drag and drop
   styles/            design tokens and app styles
 public/icons/        app icons and the Material Symbols used by the UI

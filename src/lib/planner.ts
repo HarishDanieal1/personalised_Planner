@@ -76,3 +76,9 @@ export function cleanPlan(raw: unknown, day: Day, settings: Settings, notBefore 
 }
 
 export const describeBlock = (b: Block): string => `${hm(b.start)}-${hm(b.start + b.dur)} ${b.text}`;
+
+/** The block happening now, or else the next one that is not done. Null when nothing is left today. */
+export function nextBlock(blocks: Block[], nowMin: number): { block: Block; now: boolean } | null {
+  const left = [...blocks].sort((a, b) => a.start - b.start).find((b) => !b.done && b.start + b.dur > nowMin);
+  return left ? { block: left, now: left.start <= nowMin } : null;
+}

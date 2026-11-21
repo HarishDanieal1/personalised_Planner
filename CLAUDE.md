@@ -46,7 +46,7 @@ A change is done when `npm run check` passes. Add or update tests for any logic 
 - The logo (`src/app/logo.ts`, `public/icons/app-icon.svg`) is Planner's own: a glass orb with a living neural core and an orbit ring. Don't swap in characters, insignia or names owned by others.
 - UI components come from Web Awesome's **free** components (`@awesome.me/webawesome`). Import each one in `src/app/components.ts`. Use the short size values (`s`, `m`, `l`).
 - Icons are Material Symbols SVGs copied into `public/icons/material/` (offline). Copy only the icons you use; remove ones you stop using.
-- Dashboard metrics each get their own card. Charts: one series per chart, colours from the `--series-N` palette (validated for colour-blindness), a tooltip per mark, a hidden data table, labels in text colours rather than series colours. Status (over a limit) uses the critical colour with an icon and words, never colour alone.
+- Dashboard and Progress metrics each get their own card. The Dashboard summarises every area and links to it; Progress holds the day-to-day detail. Charts: one series per chart, colours from the `--series-N` palette (validated for colour-blindness), a tooltip per mark, a hidden data table, labels in text colours rather than series colours. Status (over a limit) uses the critical colour with an icon and words, never colour alone.
 - Sample or placeholder data is always labelled as such on the page.
 - Write copy from the person's side of the screen: sentence case, plain verbs, buttons that say what happens ("Add block", not "Submit"). No filler, no emoji, no "A · B" meta strings, no decorative eyebrows or numbering.
 - Check desktop (1440px), phone (390px), keyboard focus and `prefers-reduced-motion`.

@@ -36,6 +36,6 @@ export function logo(size = 34): SVGElement {
     el('circle', { class: 'core', cx: 32, cy: 32, r: 8, fill: `url(#${id}-core)` }),
     el('ellipse', { cx: 25.5, cy: 22, rx: 5.5, ry: 2.6, fill: '#ffffff', 'fill-opacity': '0.4', transform: 'rotate(-30 25.5 22)' }),
     el('path', { d: RING_FRONT, fill: 'none', stroke: 'var(--logo-ring)', 'stroke-width': 1.6, 'stroke-opacity': '0.9' }),
-    el('circle', { class: 'satellite', cx: 12.01, cy: 44.93, r: 2.4, fill: 'var(--logo-core)' })
+    el('circle', { class: 'satellite', cx: 12.01, cy: 44.93, r: 2.4, fill: 'var(--logo-ring)' })
   ]);
 }

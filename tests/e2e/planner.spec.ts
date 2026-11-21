@@ -8,19 +8,34 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
 });
 
-test('opens on the dashboard with every metric in its own card', async ({ page }) => {
+test('opens on the dashboard with every area in its own card', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
+  for (const section of ['Today', 'This week and year', 'Board', 'Money', 'Reset']) {
+    await expect(page.locator('h2.dash-section', { hasText: new RegExp(`^${section}$`) })).toHaveCount(1);
+  }
+  for (const title of ['Productivity today', 'Time blocks', 'Top priorities', 'Habits', 'This week', 'Active sprint', 'In progress', 'Assigned to the AI', 'Net worth', 'Spent this month', 'Days steady']) {
+    await expect(page.locator('.card-head h2', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
+  }
+  await expect(page.locator('.card-head h2', { hasText: /^Year \d{4}$/ })).toHaveCount(1);
+  await expect(page.getByText('No goals set yet')).toBeVisible();
+  await expect(page.locator('.card', { has: page.locator('h2', { hasText: /^Net worth$/ }) })).toContainText('Sample data');
+  await shot(page, 'dashboard-empty');
+});
+
+test('progress keeps the day-to-day metrics, one card each', async ({ page }) => {
+  await page.goto('/#progress');
+  await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible();
   for (const title of ['Productivity', 'Top priorities', 'Time blocks', 'Habits', 'Focus', 'Gaming', 'Cooking', 'Exercise', 'This week', 'Board', 'Days steady']) {
     await expect(page.locator('.card-head h2', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
   }
-  await shot(page, 'dashboard-empty');
+  await shot(page, 'progress-empty');
 });
 
 test('navigation reaches every page, with collapsible groups', async ({ page, isMobile }) => {
   await page.goto('/');
   const open = async () => { if (isMobile) await page.locator('[data-toggle-nav]').click(); };
-  for (const [id, heading] of [['day', /day,/i], ['week', /Week of/], ['month', /\d{4}$/], ['year', /^\d{4}$/], ['board', 'Board'], ['reset', 'Reset'], ['settings', 'Settings'], ['dashboard', 'Dashboard']] as const) {
+  for (const [id, heading] of [['day', /day,/i], ['week', /Week of/], ['month', /\d{4}$/], ['year', /^\d{4}$/], ['board', 'Board'], ['reset', 'Reset'], ['settings', 'Settings'], ['progress', 'Progress'], ['dashboard', 'Dashboard']] as const) {
     await open();
     await page.locator(`.sidenav a[data-page="${id}"]`).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
@@ -48,7 +63,7 @@ test('the left navigation stays in place while the page scrolls', async ({ page,
   await shot(page, 'year');
 });
 
-test('day: priorities, brain dump and a time block feed the dashboard', async ({ page, isMobile }) => {
+test('day: priorities, brain dump and a time block feed progress', async ({ page, isMobile }) => {
   await page.goto('/#day');
   await page.locator('#priority-0').fill('Ship weekly report');
   await page.locator('#dump-add').click();
@@ -70,9 +85,9 @@ test('day: priorities, brain dump and a time block feed the dashboard', async ({
   await expect(page.locator('.block:not(.preview)', { hasText: 'Standup' })).toBeVisible();
 
   await page.locator('.block', { hasText: 'Standup' }).locator('.check').click();
-  await page.goto('/#dashboard');
+  await page.goto('/#progress');
   await expect(page.locator('.card', { has: page.locator('h2', { hasText: /^Time blocks$/ }) }).locator('.metric')).toContainText('1');
-  await shot(page, 'dashboard-with-data');
+  await shot(page, 'progress-with-data');
 });
 
 test('day: drag a brain dump item onto the schedule', async ({ page, isMobile }) => {
@@ -178,12 +193,12 @@ test('reset: the urge reset logs an entry', async ({ page }) => {
   await shot(page, 'reset');
 });
 
-test('settings: add a tracker and it appears on the dashboard', async ({ page }) => {
+test('settings: add a tracker and it appears on progress', async ({ page }) => {
   await page.goto('/#settings');
   await page.locator('#tracker-name').click();
   await page.keyboard.type('Reading');
   await page.getByText('Add tracker').click();
-  await page.goto('/#dashboard');
+  await page.goto('/#progress');
   await expect(page.locator('.card-head h2', { hasText: /^Reading$/ })).toBeVisible();
   await page.goto('/#settings');
   await shot(page, 'settings');

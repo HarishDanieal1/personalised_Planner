@@ -8,6 +8,7 @@ import { shortDate } from '../lib/dates';
 import { settings, stopTimer, trackerColor } from './state';
 import { applyTheme } from './theme';
 import { renderDashboard } from '../pages/dashboard';
+import { renderProgress } from '../pages/progress';
 import { renderDay } from '../pages/day';
 import { renderWeek } from '../pages/week';
 import { renderMonth } from '../pages/month';
@@ -30,6 +31,7 @@ const page = (id: string, label: string, ic: string, render: Renderer): PageDef 
 const NAV: NavEntry[] = [
   page('dashboard', 'Dashboard', 'dashboard', () => renderDashboard()),
   { group: 'planner', label: 'Planner', icon: 'event_note', items: [
+    page('progress', 'Progress', 'trending_up', () => renderProgress()),
     page('day', 'Day', 'today', (p) => renderDay(p)),
     page('week', 'Week', 'date_range', (p) => renderWeek(p)),
     page('month', 'Month', 'calendar_month', (p) => renderMonth(p)),
