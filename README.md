@@ -62,6 +62,22 @@ On the Day page, "Plan my day with Claude" reads your priorities, brain dump, bo
 
 Open Planner in Edge or Chrome and choose **Install** in the address bar (or the browser menu). On Android, use **Add to Home screen**. It opens in its own window and works offline.
 
+## AI agents on GitHub
+
+The repo has two Claude workflows (`.github/workflows/claude.yml` and `claude-review.yml`), built on [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action):
+
+- **@claude:** mention `@claude` in an issue, a pull request comment or a review, and Claude answers, investigates or makes the change on a branch.
+- **Pull request review:** Claude reviews every pull request when it's opened or updated and leaves comments. It doesn't push changes.
+
+Both follow the rules in [CLAUDE.md](CLAUDE.md). Only people with write access to the repo can trigger them, and runs from forked pull requests are off.
+
+To turn them on in your copy:
+
+1. Install the Claude GitHub App on the repository: https://github.com/apps/claude
+2. In the repository, go to **Settings → Secrets and variables → Actions → New repository secret**, name it `ANTHROPIC_API_KEY`, and paste a key from [console.anthropic.com](https://console.anthropic.com).
+
+Until the secret exists, both workflows skip with a notice.
+
 ## Project layout
 
 ```
@@ -75,6 +91,7 @@ public/icons/        app icons and the Material Symbols used by the UI
 supabase/migrations/ database schema
 tests/unit/          Vitest
 tests/e2e/           Playwright
+CLAUDE.md            rules for AI agents and contributors
 legacy/v0.0.1.html   the first single-file version
 ```
 
