@@ -60,12 +60,13 @@ test('day: priorities, brain dump and a time block feed the dashboard', async ({
   const layer = page.locator('.blocks');
   await layer.scrollIntoViewIfNeeded();
   const box = (await layer.boundingBox())!;
-  // On phones the sticky top bar covers the first rows after scrolling, so tap a row further down.
+  // The sticky top bar covers the first rows after scrolling, so use a row further down.
   if (isMobile) await page.touchscreen.tap(box.x + 20, box.y + 6 * 48 + 10);
-  else await page.mouse.click(box.x + 20, box.y + 10);
-  await expect(page.locator('wa-dialog[open] wa-input')).toBeVisible();
-  await page.keyboard.type('Standup');
-  await page.keyboard.press('Enter');
+  else await page.mouse.click(box.x + 20, box.y + 4 * 48 + 10);
+  const blockName = page.locator('wa-dialog[open] wa-input input');
+  await expect(blockName).toBeVisible();
+  await blockName.fill('Standup');
+  await blockName.press('Enter');
   await expect(page.locator('.block:not(.preview)', { hasText: 'Standup' })).toBeVisible();
 
   await page.locator('.block', { hasText: 'Standup' }).locator('.check').click();
@@ -106,10 +107,15 @@ test('board: plan a sprint, work an issue and see its history', async ({ page, i
   await personal.getByText('Create sprint').click();
   await page.locator('.issue-row', { hasText: 'Write weekly report' }).click();
   const dialog = page.locator('wa-dialog[open]');
-  await dialog.locator('wa-select[label="Sprint"]').click();
-  await page.locator('wa-option', { hasText: 'PER Sprint 1' }).click();
-  await dialog.locator('wa-select[label="Assignee"]').click();
-  await page.locator('wa-option', { hasText: /^AI$/ }).click();
+  // Pick from each dropdown, waiting for it to close before opening the next.
+  const pick = async (label: string, option: RegExp) => {
+    const select = dialog.locator(`wa-select[label="${label}"]`);
+    await select.click();
+    await select.locator('wa-option', { hasText: option }).click();
+    await expect(select).not.toHaveAttribute('open', '');
+  };
+  await pick('Sprint', /PER Sprint 1/);
+  await pick('Assignee', /^\s*AI\s*$/);
   await dialog.getByText('Save', { exact: true }).click();
   await expect(page.locator('[data-drop^="sprint:"][data-drop$=":PER"]:not([data-drop^="sprint:backlog"]) .issue-row')).toHaveCount(1);
 
