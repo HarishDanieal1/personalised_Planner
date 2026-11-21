@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Planner: install", "type": "shell", "command": "npm run setup > logs/setup.log 2>&1", "problemMatcher": [] },
+    { "label": "Planner: check (build, unit, e2e)", "type": "shell", "command": "npm run check", "problemMatcher": [] },
+    { "label": "Planner: start dev server", "type": "shell", "command": "npm run dev", "isBackground": true, "problemMatcher": [] }
+  ]
+}
