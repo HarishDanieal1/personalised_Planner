@@ -7,6 +7,7 @@ import { activeSprint, sprintPoints } from '../lib/board';
 import { barChart } from '../lib/charts';
 import { day, reset, settings } from '../app/state';
 import { store, yearKey } from '../lib/store';
+import { FEATURES } from '../lib/features';
 import { loadBoard } from './board';
 import { financeSummary, formatMoney } from './finance';
 import { card, pageHead } from '../app/ui';
@@ -24,8 +25,7 @@ export function renderDashboard(): Node[] {
     h('div', { class: 'dash-grid' }, weekCard(t), yearCard(t)),
     h('h2', { class: 'dash-section' }, 'Board'),
     h('div', { class: 'dash-grid' }, sprintCard(bd), doingCard(bd), aiCard(bd)),
-    h('h2', { class: 'dash-section' }, 'Money'),
-    h('div', { class: 'dash-grid' }, netWorthCard(), budgetCard()),
+    ...(FEATURES.financial ? [h('h2', { class: 'dash-section' }, 'Money'), h('div', { class: 'dash-grid' }, netWorthCard(), budgetCard())] : []),
     h('h2', { class: 'dash-section' }, 'Reset'),
     h('div', { class: 'dash-grid' }, steadyCard(t))
   ];

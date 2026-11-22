@@ -11,15 +11,16 @@ test.beforeEach(async ({ page }) => {
 test('opens on the dashboard with every area in its own card', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
-  for (const section of ['Today', 'This week and year', 'Board', 'Money', 'Reset']) {
+  for (const section of ['Today', 'This week and year', 'Board', 'Reset']) {
     await expect(page.locator('h2.dash-section', { hasText: new RegExp(`^${section}$`) })).toHaveCount(1);
   }
-  for (const title of ['Productivity today', 'Time blocks', 'Top priorities', 'Habits', 'This week', 'Active sprint', 'In progress', 'Assigned to the AI', 'Net worth', 'Spent this month', 'Days steady']) {
+  for (const title of ['Productivity today', 'Time blocks', 'Top priorities', 'Habits', 'This week', 'Active sprint', 'In progress', 'Assigned to the AI', 'Days steady']) {
     await expect(page.locator('.card-head h2', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
   }
   await expect(page.locator('.card-head h2', { hasText: /^Year \d{4}$/ })).toHaveCount(1);
   await expect(page.getByText('No goals set yet')).toBeVisible();
-  await expect(page.locator('.card', { has: page.locator('h2', { hasText: /^Net worth$/ }) })).toContainText('Sample data');
+  // Financial is switched off for now (src/lib/features.ts): no money cards.
+  await expect(page.locator('h2.dash-section', { hasText: 'Money' })).toHaveCount(0);
   await shot(page, 'dashboard-empty');
 });
 
@@ -40,16 +41,11 @@ test('navigation reaches every page, with collapsible groups', async ({ page, is
     await page.locator(`.sidenav a[data-page="${id}"]`).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
   }
-  // Financial starts collapsed; opening it reveals its pages.
+  // Financial is switched off for now (src/lib/features.ts): no group, and its routes fall back to the dashboard.
   await open();
-  const toggle = page.locator('[data-group="financial"] .nav-group-toggle');
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await page.locator('.sidenav a[data-page="fin-budget"]').click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Budget');
-  await expect(page.getByText('These are sample numbers')).toBeVisible();
-  await shot(page, 'financial-budget');
+  await expect(page.locator('[data-group="financial"]')).toHaveCount(0);
+  await page.goto('/#fin-budget');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dashboard');
 });
 
 test('the left navigation stays in place while the page scrolls', async ({ page, isMobile }) => {

@@ -1,6 +1,6 @@
 # Planner: notes for AI agents and contributors
 
-Planner is an open-source personal planner: time blocks, a weekly matrix, monthly and yearly goals, a Jira-style board shared by you and the AI, habit and time trackers, a Reset page, a Financial section (sample data for now), optional Supabase sync and optional Claude day planning. Read README.md for what each page does.
+Planner is an open-source personal planner: time blocks, a weekly matrix, monthly and yearly goals, a Jira-style board shared by you and the AI, habit and time trackers, a Reset page, a Financial section (sample data, hidden for now behind `FEATURES.financial` in `src/lib/features.ts`), optional Supabase sync and optional Claude day planning. Read README.md for what each page does.
 
 ## Commands
 

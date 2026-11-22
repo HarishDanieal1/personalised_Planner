@@ -16,6 +16,7 @@ import { renderBoard } from '../pages/board';
 import { renderReset } from '../pages/reset';
 import { renderYear } from '../pages/year';
 import { FINANCE_PAGES, renderFinance } from '../pages/finance';
+import { FEATURES } from '../lib/features';
 import { logo } from './logo';
 import { renderSettings } from '../pages/settings';
 import type { Board, Day, Month, Week } from '../lib/types';
@@ -39,10 +40,10 @@ const NAV: NavEntry[] = [
     page('reset', 'Reset', 'self_improvement', () => renderReset())
   ] },
   page('board', 'Board', 'view_kanban', (p) => renderBoard(p)),
-  { group: 'financial', label: 'Financial', icon: 'account_balance_wallet', items: FINANCE_PAGES.flatMap((f, i) => [
+  ...(FEATURES.financial ? [{ group: 'financial', label: 'Financial', icon: 'account_balance_wallet', items: FINANCE_PAGES.flatMap((f, i) => [
     ...(f.section && f.section !== FINANCE_PAGES[i - 1]?.section ? [{ section: f.section }] : []),
     page(f.id, f.label, f.icon, () => renderFinance(f.id))
-  ]) }
+  ]) } as NavGroup] : [])
 ];
 const SETTINGS: PageDef = page('settings', 'Settings', 'settings', () => renderSettings());
 const isGroup = (e: NavEntry): e is NavGroup => 'group' in e;
