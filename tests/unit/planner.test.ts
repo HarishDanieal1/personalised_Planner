@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanPlan, dayScore, overlaps, snapBlock, trackerMinutes } from '../../src/lib/planner';
+import { cleanPlan, dayScore, nextBlock, overlaps, snapBlock, trackerMinutes } from '../../src/lib/planner';
 import { defaultDay, defaultSettings } from '../../src/lib/defaults';
 
 describe('snapBlock', () => {
@@ -79,5 +79,19 @@ describe('cleanPlan', () => {
     expect(cleanPlan({ blocks: [{ start: '08:00', minutes: 60, text: 'Too early' }] }, d, s, 9 * 60).blocks).toEqual([]);
     expect(cleanPlan('nonsense', d, s).blocks).toEqual([]);
     expect(cleanPlan(null, d, s).note).toBe('');
+  });
+});
+
+describe('nextBlock', () => {
+  const b = (id: string, start: number, dur: number, done = false) => ({ id, start, dur, text: id, done, tracker: null });
+  it('returns the block in progress, then the next one', () => {
+    const blocks = [b('b', 600, 60), b('a', 540, 60)];
+    expect(nextBlock(blocks, 560)?.block.id).toBe('a');
+    expect(nextBlock(blocks, 560)?.now).toBe(true);
+    expect(nextBlock(blocks, 500)?.now).toBe(false);
+  });
+  it('skips done and past blocks, and returns null when nothing is left', () => {
+    expect(nextBlock([b('a', 540, 60, true), b('b', 600, 60)], 545)?.block.id).toBe('b');
+    expect(nextBlock([b('a', 540, 60)], 700)).toBeNull();
   });
 });

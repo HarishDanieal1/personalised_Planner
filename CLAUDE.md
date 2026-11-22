@@ -1,6 +1,6 @@
 # Planner: notes for AI agents and contributors
 
-Planner is an open-source personal planner: time blocks, a weekly matrix, monthly goals, a board, habit and time trackers, a Reset page, optional Supabase sync and optional Claude day planning. Read README.md for what each page does.
+Planner is an open-source personal planner: time blocks, a weekly matrix, monthly and yearly goals, a Jira-style board shared by you and the AI, habit and time trackers, a Reset page, a Financial section (sample data, hidden for now behind `FEATURES.financial` in `src/lib/features.ts`), optional Supabase sync and optional Claude day planning. Read README.md for what each page does.
 
 ## Commands
 
@@ -27,8 +27,8 @@ A change is done when `npm run check` passes. Add or update tests for any logic 
 ## Structure
 
 - `src/app/`: shell (top bar, left navigation, router, search), shared state, theme, UI helpers
-- `src/pages/`: one file per page. A new section (for example anime and film history, or an AI agent) is a new page file plus one entry in `PAGES` in `src/app/shell.ts`. Its data is a new document key in the store; no schema change is needed.
-- `src/lib/`: logic without UI: `dates`, `planner` (rules), `store` (local-first documents), `sync` (Supabase), `ai` (Claude), `charts`, `drag`
+- `src/pages/`: one file per page. A new section (for example anime and film history, or an AI agent) is a new page file plus one entry in `NAV` in `src/app/shell.ts` (top level, or inside a collapsible group). Its data is a new document key in the store; no schema change is needed.
+- `src/lib/`: logic without UI: `dates`, `planner` (rules), `board` (issues, sprints, history), `store` (local-first documents), `sync` (Supabase), `ai` (Claude), `charts`, `drag`
 - `src/styles/tokens.css`: design tokens; `src/styles/app.css`: layout and components
 - `supabase/migrations/`: schema; `tests/unit/`, `tests/e2e/`; `legacy/v0.0.1.html`: the first version
 
@@ -36,17 +36,25 @@ A change is done when `npm run check` passes. Add or update tests for any logic 
 
 - Source files: lowercase, one word where possible, kebab-case otherwise (`app-shell.ts`, not `AppShell.ts`). Tests: `<name>.test.ts` (unit), `<name>.spec.ts` (Playwright).
 - Supabase migrations follow the CLI convention `YYYYMMDDHHmmss_verb_description.sql` in UTC, for example `20261121190806_create_planner_docs_table.sql`. Use the real creation time; never rename a migration once it has been applied.
-- Store keys: `settings`, `board`, `reset`, `day:YYYY-MM-DD`, `week:YYYY-MM-DD` (the Monday), `month:YYYY-MM`. Keys must match `^[a-z0-9:-]{1,64}$` (enforced by the database).
+- Store keys: `settings`, `board`, `reset`, `day:YYYY-MM-DD`, `week:YYYY-MM-DD` (the Monday), `month:YYYY-MM`, `year:YYYY`. Keys must match `^[a-z0-9:-]{1,64}$` (enforced by the database).
 - Branches: `v0.0.x` for releases, `feature/<short-name>` or `fix/<short-name>` for work.
 
 ## Design
 
-- Google Cloud console look: white top bar, rectangular left navigation, grey canvas, white cards with 1px borders, one blue accent. Use the tokens in `tokens.css`; don't hard-code colours. Every new colour needs a dark-mode value.
+- Glass, after Apple's design language: translucent top bar and left navigation over a softly lit canvas (deep space in dark mode), frosted cards with hairline borders and soft shadows, rounded corners (cards 16px, controls 10px), the system font (San Francisco on Apple devices, Segoe UI on Windows), one blue accent. Use the tokens in `tokens.css`; don't hard-code colours. Every new colour needs a dark-mode value, and glass falls back to solid surfaces when blur isn't supported or the person asks for reduced transparency.
+- The left navigation stays fixed while the page scrolls. Groups (Planner, Financial) collapse and expand; the open state is saved per device, and the group holding the current page always opens.
+- The logo (`src/app/logo.ts`, `public/icons/app-icon.svg`) is Planner's own: a glass orb with a living neural core and an orbit ring. Don't swap in characters, insignia or names owned by others.
 - UI components come from Web Awesome's **free** components (`@awesome.me/webawesome`). Import each one in `src/app/components.ts`. Use the short size values (`s`, `m`, `l`).
 - Icons are Material Symbols SVGs copied into `public/icons/material/` (offline). Copy only the icons you use; remove ones you stop using.
-- Dashboard metrics each get their own card. Charts: one series per chart, colours from the `--series-N` palette (validated for colour-blindness), a tooltip per mark, a hidden data table, labels in text colours rather than series colours. Status (over a limit) uses the critical colour with an icon and words, never colour alone.
+- Dashboard and Progress metrics each get their own card. The Dashboard summarises every area and links to it; Progress holds the day-to-day detail. Charts: one series per chart, colours from the `--series-N` palette (validated for colour-blindness), a tooltip per mark, a hidden data table, labels in text colours rather than series colours. Status (over a limit) uses the critical colour with an icon and words, never colour alone.
+- Sample or placeholder data is always labelled as such on the page.
 - Write copy from the person's side of the screen: sentence case, plain verbs, buttons that say what happens ("Add block", not "Submit"). No filler, no emoji, no "A · B" meta strings, no decorative eyebrows or numbering.
 - Check desktop (1440px), phone (390px), keyboard focus and `prefers-reduced-motion`.
+
+## Board
+
+- Projects keep Personal (`PER`) and Work (`WORK`) apart. Issues have a key, type, priority, story points, an assignee (`me` or `ai`), a sprint or the backlog, an optional epic, labels, comments and a history.
+- Change issues through `src/lib/board.ts` (`createIssue`, `updateIssue`, `addComment`, `completeSprint`) so every change is logged with who made it. When the AI acts (for example an accepted day plan, see `logAiPlan`), record it with `by: 'ai'`.
 
 ## Models and cost
 

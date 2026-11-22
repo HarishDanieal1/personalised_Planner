@@ -5,6 +5,8 @@ import { h, icon, valueOf, checkedOf, focusById } from '../lib/dom';
 import { addDays, h12, longDate, today } from '../lib/dates';
 import { clamp, cleanPlan, uid, type PlanResult } from '../lib/planner';
 import { askClaudeForJson, buildPlanPrompt, ClaudeError, getApiKey } from '../lib/ai';
+import { logAiPlan } from '../lib/board';
+import { store } from '../lib/store';
 import { moveInList, setDragHandlers, suppressClick } from '../lib/drag';
 import { board, day, saveDay, saveSettings, settings, trackerColor } from '../app/state';
 import { card, iconButton, openDialog, pageHead } from '../app/ui';
@@ -108,7 +110,7 @@ function planCard(d: Day, date: string, save: () => void): HTMLElement {
       const now = new Date();
       const nowMin = date === today() ? now.getHours() * 60 + now.getMinutes() : null;
       const raw = await askClaudeForJson(buildPlanPrompt(d, date, settings(), board(), valueOf(notes), nowMin));
-      showPlan(cleanPlan(raw, d, settings(), nowMin ?? -1), d, save, out);
+      showPlan(cleanPlan(raw, d, settings(), nowMin ?? -1), d, date, save, out);
     } catch (e) {
       out.replaceChildren(h('wa-callout', { variant: 'danger' }, e instanceof ClaudeError ? e.message : 'Claude couldn’t make a plan. Try again.'));
     }
@@ -123,7 +125,7 @@ function planCard(d: Day, date: string, save: () => void): HTMLElement {
   ]);
 }
 
-function showPlan(plan: PlanResult, d: Day, save: () => void, out: HTMLElement): void {
+function showPlan(plan: PlanResult, d: Day, date: string, save: () => void, out: HTMLElement): void {
   if (!plan.blocks.length) { out.replaceChildren(h('p', { class: 'muted' }, plan.note || 'No open time left to plan.')); return; }
   const picks = plan.blocks.map((b) => ({ b, on: true }));
   out.replaceChildren(
@@ -133,7 +135,14 @@ function showPlan(plan: PlanResult, d: Day, save: () => void, out: HTMLElement):
       h('span', { class: 'time' }, `${h12(p.b.start)} – ${h12(p.b.start + p.b.dur)}`),
       h('span', null, p.b.text)))),
     h('div', { style: 'display:flex;gap:8px;margin-top:12px' },
-      h('wa-button', { variant: 'brand', appearance: 'accent', onclick: () => { d.blocks.push(...picks.filter((p) => p.on).map((p) => p.b)); save(); rerender(); } }, 'Add selected blocks'),
+      h('wa-button', { variant: 'brand', appearance: 'accent', onclick: () => {
+        const kept = picks.filter((p) => p.on).map((p) => p.b);
+        d.blocks.push(...kept);
+        save();
+        // Keep a record of what the AI planned, so it can be reviewed on the board later.
+        if (kept.length) { logAiPlan(board(), date, kept.map((b) => ({ time: `${h12(b.start)} to ${h12(b.start + b.dur)}`, text: b.text })), plan.note); store.save('board'); }
+        rerender();
+      } }, 'Add selected blocks'),
       h('wa-button', { appearance: 'outlined', onclick: () => out.replaceChildren() }, 'Discard')));
 }
 

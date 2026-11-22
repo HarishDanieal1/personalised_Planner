@@ -1,4 +1,5 @@
-import type { Board, Day, Month, Reset, Settings, Week } from './types';
+import type { Board, Day, Month, Reset, Settings, Week, Year } from './types';
+import { emptyBoard } from './board';
 
 export const defaultSettings = (): Settings => ({
   dayStart: 6,
@@ -30,7 +31,8 @@ export const defaultMonth = (): Month => ({
   goals: [{ text: '', done: false }, { text: '', done: false }, { text: '', done: false }],
   cells: {}
 });
-export const defaultBoard = (): Board => ({ cards: [] });
+export const defaultBoard = (): Board => emptyBoard();
+export const defaultYear = (): Year => ({ theme: '', goals: Array.from({ length: 5 }, () => ({ text: '', done: false })) });
 export const defaultReset = (): Reset => ({ streakStart: null, best: 0, slips: [], urges: [] });
 
 /** The next free palette slot for a new tracker, so existing trackers keep their colours. */
@@ -39,11 +41,12 @@ export function nextTrackerSlot(used: number[]): number {
   return ((used.length) % 8) + 1;
 }
 
-/** Document keys: settings, board, reset, day:YYYY-MM-DD, week:YYYY-MM-DD (Monday), month:YYYY-MM. */
+/** Document keys: settings, board, reset, day:YYYY-MM-DD, week:YYYY-MM-DD (Monday), month:YYYY-MM, year:YYYY. */
 export function defaultFor(key: string): object {
   if (key.startsWith('day:')) return defaultDay();
   if (key.startsWith('week:')) return defaultWeek();
   if (key.startsWith('month:')) return defaultMonth();
+  if (key.startsWith('year:')) return defaultYear();
   if (key === 'settings') return defaultSettings();
   if (key === 'board') return defaultBoard();
   if (key === 'reset') return defaultReset();

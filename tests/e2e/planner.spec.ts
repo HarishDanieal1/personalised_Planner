@@ -8,25 +8,58 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
 });
 
-test('opens on the dashboard with every metric in its own card', async ({ page }) => {
+test('opens on the dashboard with every area in its own card', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
-  for (const title of ['Productivity', 'Top priorities', 'Time blocks', 'Habits', 'Focus', 'Gaming', 'Cooking', 'Exercise', 'This week', 'Board', 'Days steady']) {
+  for (const section of ['Today', 'This week and year', 'Board', 'Reset']) {
+    await expect(page.locator('h2.dash-section', { hasText: new RegExp(`^${section}$`) })).toHaveCount(1);
+  }
+  for (const title of ['Productivity today', 'Time blocks', 'Top priorities', 'Habits', 'This week', 'Active sprint', 'In progress', 'Assigned to the AI', 'Days steady']) {
     await expect(page.locator('.card-head h2', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
   }
+  await expect(page.locator('.card-head h2', { hasText: /^Year \d{4}$/ })).toHaveCount(1);
+  await expect(page.getByText('No goals set yet')).toBeVisible();
+  // Financial is switched off for now (src/lib/features.ts): no money cards.
+  await expect(page.locator('h2.dash-section', { hasText: 'Money' })).toHaveCount(0);
   await shot(page, 'dashboard-empty');
 });
 
-test('navigation reaches every page', async ({ page, isMobile }) => {
-  await page.goto('/');
-  for (const [label, heading] of [['Day', /day,/i], ['Week', /Week of/], ['Month', /\d{4}$/], ['Board', 'Board'], ['Reset', 'Reset'], ['Settings', 'Settings'], ['Dashboard', 'Dashboard']] as const) {
-    if (isMobile) await page.locator('[data-toggle-nav]').click();
-    await page.locator(`.sidenav a[data-page="${label.toLowerCase()}"]`).click();
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
+test('progress keeps the day-to-day metrics, one card each', async ({ page }) => {
+  await page.goto('/#progress');
+  await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible();
+  for (const title of ['Productivity', 'Top priorities', 'Time blocks', 'Habits', 'Focus', 'Gaming', 'Cooking', 'Exercise', 'This week', 'Board', 'Days steady']) {
+    await expect(page.locator('.card-head h2', { hasText: new RegExp(`^${title}$`) })).toHaveCount(1);
   }
+  await shot(page, 'progress-empty');
 });
 
-test('day: priorities, brain dump and a time block feed the dashboard', async ({ page, isMobile }) => {
+test('navigation reaches every page, with collapsible groups', async ({ page, isMobile }) => {
+  await page.goto('/');
+  const open = async () => { if (isMobile) await page.locator('[data-toggle-nav]').click(); };
+  for (const [id, heading] of [['day', /day,/i], ['week', /Week of/], ['month', /\d{4}$/], ['year', /^\d{4}$/], ['board', 'Board'], ['reset', 'Reset'], ['settings', 'Settings'], ['progress', 'Progress'], ['dashboard', 'Dashboard']] as const) {
+    await open();
+    await page.locator(`.sidenav a[data-page="${id}"]`).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
+  }
+  // Financial is switched off for now (src/lib/features.ts): no group, and its routes fall back to the dashboard.
+  await open();
+  await expect(page.locator('[data-group="financial"]')).toHaveCount(0);
+  await page.goto('/#fin-budget');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dashboard');
+});
+
+test('the left navigation stays in place while the page scrolls', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'On phones the navigation is a drawer');
+  await page.goto('/#year');
+  const settings = page.locator('.sidenav a[data-page="settings"]');
+  const before = (await settings.boundingBox())!.y;
+  await page.mouse.wheel(0, 1500);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
+  expect(Math.abs((await settings.boundingBox())!.y - before)).toBeLessThan(2);
+  await shot(page, 'year');
+});
+
+test('day: priorities, brain dump and a time block feed progress', async ({ page, isMobile }) => {
   await page.goto('/#day');
   await page.locator('#priority-0').fill('Ship weekly report');
   await page.locator('#dump-add').click();
@@ -38,18 +71,19 @@ test('day: priorities, brain dump and a time block feed the dashboard', async ({
   const layer = page.locator('.blocks');
   await layer.scrollIntoViewIfNeeded();
   const box = (await layer.boundingBox())!;
-  // On phones the sticky top bar covers the first rows after scrolling, so tap a row further down.
+  // The sticky top bar covers the first rows after scrolling, so use a row further down.
   if (isMobile) await page.touchscreen.tap(box.x + 20, box.y + 6 * 48 + 10);
-  else await page.mouse.click(box.x + 20, box.y + 10);
-  await expect(page.locator('wa-dialog[open] wa-input')).toBeVisible();
-  await page.keyboard.type('Standup');
-  await page.keyboard.press('Enter');
+  else await page.mouse.click(box.x + 20, box.y + 4 * 48 + 10);
+  const blockName = page.locator('wa-dialog[open] wa-input input');
+  await expect(blockName).toBeVisible();
+  await blockName.fill('Standup');
+  await blockName.press('Enter');
   await expect(page.locator('.block:not(.preview)', { hasText: 'Standup' })).toBeVisible();
 
   await page.locator('.block', { hasText: 'Standup' }).locator('.check').click();
-  await page.goto('/#dashboard');
+  await page.goto('/#progress');
   await expect(page.locator('.card', { has: page.locator('h2', { hasText: /^Time blocks$/ }) }).locator('.metric')).toContainText('1');
-  await shot(page, 'dashboard-with-data');
+  await shot(page, 'progress-with-data');
 });
 
 test('day: drag a brain dump item onto the schedule', async ({ page, isMobile }) => {
@@ -69,24 +103,68 @@ test('day: drag a brain dump item onto the schedule', async ({ page, isMobile })
   await shot(page, 'day');
 });
 
-test('board: add cards and drag one to In progress', async ({ page, isMobile }) => {
-  await page.goto('/#board');
+test('board: plan a sprint, work an issue and see its history', async ({ page, isMobile }) => {
+  await page.goto('/#board/backlog');
   for (const t of ['Write weekly report', 'Plan next sprint']) {
-    await page.locator('#add-todo').click();
+    await page.locator('#quick-add-PER').click();
     await page.keyboard.type(t);
     await page.keyboard.press('Enter');
   }
-  await expect(page.locator('[data-drop="col:todo"] .tcard')).toHaveCount(2);
+  await expect(page.locator('[data-drop="sprint:backlog:PER"] .issue-row')).toHaveCount(2);
+  await expect(page.locator('.issue-row .key').first()).toHaveText('PER-1');
+
+  // Create a sprint and move PER-1 into it through the issue dialog (works with keyboard and touch).
+  const personal = page.locator('.project-block').first();
+  await personal.getByText('Create sprint').click();
+  await page.locator('.issue-row', { hasText: 'Write weekly report' }).click();
+  const dialog = page.locator('wa-dialog[open]');
+  // Pick from each dropdown, waiting for it to close before opening the next.
+  const pick = async (label: string, option: RegExp) => {
+    const select = dialog.locator(`wa-select[label="${label}"]`);
+    await select.click();
+    await select.locator('wa-option', { hasText: option }).click();
+    await expect(select).not.toHaveAttribute('open', '');
+  };
+  await pick('Sprint', /PER Sprint 1/);
+  await pick('Assignee', /^\s*AI\s*$/);
+  await dialog.getByText('Save', { exact: true }).click();
+  await expect(page.locator('[data-drop^="sprint:"][data-drop$=":PER"]:not([data-drop^="sprint:backlog"]) .issue-row')).toHaveCount(1);
+
+  await personal.getByText('Start sprint').click();
+  await page.locator('.segmented button', { hasText: 'Sprint board' }).click();
+  await expect(page.locator('[data-drop="status:todo"] .tcard')).toHaveCount(1);
   if (!isMobile) {
     const card = (await page.locator('.tcard').first().boundingBox())!;
-    const target = (await page.locator('[data-drop="col:doing"]').boundingBox())!;
+    const target = (await page.locator('[data-drop="status:doing"]').boundingBox())!;
     await page.mouse.move(card.x + 80, card.y + 20);
     await page.mouse.down();
     await page.mouse.move(target.x + 80, target.y + 30, { steps: 10 });
     await page.mouse.up();
-    await expect(page.locator('[data-drop="col:doing"] .tcard')).toHaveCount(1);
+    await expect(page.locator('[data-drop="status:doing"] .tcard')).toHaveCount(1);
+    // A click right after a drag is ignored on purpose, so open the card with the keyboard.
+    await page.locator('.tcard').first().focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed status from “To do” to “In progress”');
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed assignee from “Me” to “AI”');
+    await expect(page.locator('wa-dialog[open] .history-list')).toContainText('changed sprint from “Backlog” to “PER Sprint 1”');
+    await page.locator('wa-dialog[open]').getByText('Close', { exact: true }).click();
   }
   await shot(page, 'board');
+});
+
+test('board: filters narrow the backlog', async ({ page }) => {
+  await page.goto('/#board/backlog');
+  await page.locator('#quick-add-WORK').click();
+  await page.keyboard.type('Fix login bug');
+  await page.keyboard.press('Enter');
+  await page.locator('#quick-add-PER').click();
+  await page.keyboard.type('Buy groceries');
+  await page.keyboard.press('Enter');
+  await page.locator('.board-filters .chip', { hasText: 'Work' }).click();
+  await expect(page.locator('.issue-row')).toHaveCount(1);
+  await expect(page.locator('.issue-row')).toContainText('WORK-1');
+  await page.getByText('Clear filters').click();
+  await expect(page.locator('.issue-row')).toHaveCount(2);
 });
 
 test('week: matrix items and habit ticks are saved', async ({ page }) => {
@@ -111,12 +189,12 @@ test('reset: the urge reset logs an entry', async ({ page }) => {
   await shot(page, 'reset');
 });
 
-test('settings: add a tracker and it appears on the dashboard', async ({ page }) => {
+test('settings: add a tracker and it appears on progress', async ({ page }) => {
   await page.goto('/#settings');
   await page.locator('#tracker-name').click();
   await page.keyboard.type('Reading');
   await page.getByText('Add tracker').click();
-  await page.goto('/#dashboard');
+  await page.goto('/#progress');
   await expect(page.locator('.card-head h2', { hasText: /^Reading$/ })).toBeVisible();
   await page.goto('/#settings');
   await shot(page, 'settings');

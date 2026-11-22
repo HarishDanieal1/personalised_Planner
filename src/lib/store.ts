@@ -84,3 +84,4 @@ export const store = new DocumentStore();
 export const dayKey = (date: string): string => `day:${date}`;
 export const weekKey = (monday: string): string => `week:${monday}`;
 export const monthKey = (yyyyMm: string): string => `month:${yyyyMm}`;
+export const yearKey = (yyyy: string): string => `year:${yyyy}`;

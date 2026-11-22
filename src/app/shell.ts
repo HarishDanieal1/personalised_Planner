@@ -1,4 +1,5 @@
-// App shell: top bar, rectangular left navigation, hash router, search, timer and sync status.
+// App shell: glass top bar, fixed left navigation with collapsible groups, hash router,
+// search, timer and sync status.
 import { h, icon, valueOf, focusById } from '../lib/dom';
 import { store } from '../lib/store';
 import { installDrag, setDragHandlers } from '../lib/drag';
@@ -7,11 +8,16 @@ import { shortDate } from '../lib/dates';
 import { settings, stopTimer, trackerColor } from './state';
 import { applyTheme } from './theme';
 import { renderDashboard } from '../pages/dashboard';
+import { renderProgress } from '../pages/progress';
 import { renderDay } from '../pages/day';
 import { renderWeek } from '../pages/week';
 import { renderMonth } from '../pages/month';
 import { renderBoard } from '../pages/board';
 import { renderReset } from '../pages/reset';
+import { renderYear } from '../pages/year';
+import { FINANCE_PAGES, renderFinance } from '../pages/finance';
+import { FEATURES } from '../lib/features';
+import { logo } from './logo';
 import { renderSettings } from '../pages/settings';
 import type { Board, Day, Month, Week } from '../lib/types';
 
@@ -19,15 +25,37 @@ export interface Route { page: string; param: string | null }
 type Renderer = (param: string | null) => Node[];
 
 interface PageDef { id: string; label: string; icon: string; render: Renderer }
-const PAGES: PageDef[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', render: () => renderDashboard() },
-  { id: 'day', label: 'Day', icon: 'today', render: (p) => renderDay(p) },
-  { id: 'week', label: 'Week', icon: 'date_range', render: (p) => renderWeek(p) },
-  { id: 'month', label: 'Month', icon: 'calendar_month', render: (p) => renderMonth(p) },
-  { id: 'board', label: 'Board', icon: 'view_kanban', render: () => renderBoard() },
-  { id: 'reset', label: 'Reset', icon: 'self_improvement', render: () => renderReset() }
+interface NavGroup { group: string; label: string; icon: string; items: (PageDef | { section: string })[] }
+type NavEntry = PageDef | NavGroup;
+
+const page = (id: string, label: string, ic: string, render: Renderer): PageDef => ({ id, label, icon: ic, render });
+const NAV: NavEntry[] = [
+  page('dashboard', 'Dashboard', 'dashboard', () => renderDashboard()),
+  { group: 'planner', label: 'Planner', icon: 'event_note', items: [
+    page('progress', 'Progress', 'trending_up', () => renderProgress()),
+    page('day', 'Day', 'today', (p) => renderDay(p)),
+    page('week', 'Week', 'date_range', (p) => renderWeek(p)),
+    page('month', 'Month', 'calendar_month', (p) => renderMonth(p)),
+    page('year', 'Year', 'grid_view', (p) => renderYear(p)),
+    page('reset', 'Reset', 'self_improvement', () => renderReset())
+  ] },
+  page('board', 'Board', 'view_kanban', (p) => renderBoard(p)),
+  ...(FEATURES.financial ? [{ group: 'financial', label: 'Financial', icon: 'account_balance_wallet', items: FINANCE_PAGES.flatMap((f, i) => [
+    ...(f.section && f.section !== FINANCE_PAGES[i - 1]?.section ? [{ section: f.section }] : []),
+    page(f.id, f.label, f.icon, () => renderFinance(f.id))
+  ]) } as NavGroup] : [])
 ];
-const SETTINGS: PageDef = { id: 'settings', label: 'Settings', icon: 'settings', render: () => renderSettings() };
+const SETTINGS: PageDef = page('settings', 'Settings', 'settings', () => renderSettings());
+const isGroup = (e: NavEntry): e is NavGroup => 'group' in e;
+const PAGES: PageDef[] = NAV.flatMap((e) => isGroup(e) ? e.items.filter((x): x is PageDef => 'id' in x) : [e]);
+const groupOf = (pageId: string): NavGroup | undefined => NAV.filter(isGroup).find((g) => g.items.some((x) => 'id' in x && x.id === pageId));
+
+/* Which groups are open is a per-device preference. */
+const OPEN_KEY = 'planner:nav-open';
+const openGroups = (): Set<string> => {
+  try { return new Set(JSON.parse(localStorage.getItem(OPEN_KEY) ?? '["planner"]') as string[]); } catch { return new Set(['planner']); }
+};
+const saveOpenGroups = (s: Set<string>): void => { try { localStorage.setItem(OPEN_KEY, JSON.stringify([...s])); } catch { /* private mode */ } };
 
 let main: HTMLElement;
 let nav: HTMLElement;
@@ -56,6 +84,8 @@ export function rerender(): void {
     if (a.dataset.page === route.page) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   }
+  const g = groupOf(route.page);
+  if (g) setGroupOpen(g.group, true, false);
   document.title = `${def.label} – Planner`;
   updateTimerChip();
 }
@@ -65,8 +95,18 @@ export function startApp(root: HTMLElement): void {
   installDrag();
 
   const navLink = (p: PageDef): HTMLElement => h('a', { href: `#${p.id}`, 'data-page': p.id, 'data-drawer': 'close' }, icon(p.icon), h('span', null, p.label));
+  const open = openGroups();
+  const navGroup = (g: NavGroup): HTMLElement => {
+    const listId = `nav-group-${g.group}`;
+    return h('div', { class: 'nav-group', 'data-group': g.group },
+      h('button', { type: 'button', class: 'nav-group-toggle', 'aria-expanded': String(open.has(g.group)), 'aria-controls': listId,
+        onclick: (e: MouseEvent) => setGroupOpen(g.group, (e.currentTarget as HTMLElement).getAttribute('aria-expanded') !== 'true') },
+        icon(g.icon), h('span', null, g.label), h('wa-icon', { name: 'chevron_right', class: 'chev', 'aria-hidden': 'true' })),
+      h('div', { class: 'nav-group-items', id: listId, hidden: !open.has(g.group) },
+        g.items.map((x) => 'id' in x ? navLink(x) : h('div', { class: 'nav-sub', 'aria-hidden': 'true' }, x.section))));
+  };
   nav = h('nav', { slot: 'navigation', class: 'sidenav', 'aria-label': 'Main' },
-    PAGES.map(navLink),
+    NAV.map((e) => isGroup(e) ? navGroup(e) : navLink(e)),
     h('div', { class: 'nav-spacer' }),
     h('hr'),
     navLink(SETTINGS));
@@ -76,13 +116,13 @@ export function startApp(root: HTMLElement): void {
 
   const header = h('header', { slot: 'header', class: 'topbar' },
     h('wa-button', { 'data-toggle-nav': true, appearance: 'plain' }, icon('menu', 'Open navigation')),
-    h('a', { class: 'brand', href: '#dashboard' }, h('img', { src: '/icons/app-icon.svg', alt: '' }), h('span', null, 'Planner')),
+    h('a', { class: 'brand', href: '#dashboard', 'aria-label': 'Planner, go to dashboard' }, logo(34), h('span', null, 'Planner')),
     buildSearch(),
     h('div', { class: 'top-actions' }, timerChip, syncChip));
 
   main = h('main', { id: 'main-content' });
-  const page = h('wa-page', { 'mobile-breakpoint': '900' }, header, nav, main);
-  root.replaceWith(page);
+  const shell = h('wa-page', { 'mobile-breakpoint': '900' }, header, nav, main);
+  root.replaceWith(shell);
 
   onSyncChange(renderSyncChip);
   renderSyncChip(syncState());
@@ -90,6 +130,19 @@ export function startApp(root: HTMLElement): void {
   window.addEventListener('hashchange', () => { window.scrollTo(0, 0); rerender(); });
   setInterval(updateTimerChip, 1000);
   rerender();
+}
+
+/** Open or close a navigation group. `remember` saves the choice for next time. */
+function setGroupOpen(group: string, isOpen: boolean, remember = true): void {
+  const el = nav.querySelector<HTMLElement>(`[data-group="${group}"]`);
+  if (!el) return;
+  el.querySelector('.nav-group-toggle')!.setAttribute('aria-expanded', String(isOpen));
+  (el.querySelector('.nav-group-items') as HTMLElement).hidden = !isOpen;
+  if (remember) {
+    const s = openGroups();
+    if (isOpen) s.add(group); else s.delete(group);
+    saveOpenGroups(s);
+  }
 }
 
 function renderSyncChip(s: SyncState): void {
@@ -140,7 +193,7 @@ function searchAll(q: string): Hit[] {
       d.dump.forEach((x) => add(x.text, `Brain dump, ${where}`, `#day/${date}`));
       d.blocks.forEach((b) => add(b.text, `Schedule, ${where}`, `#day/${date}`));
     } else if (key === 'board') {
-      store.get<Board>(key).cards.forEach((c) => add(c.title, 'Board', '#board'));
+      (store.get<Board>(key).issues ?? []).forEach((c) => add(`${c.key} ${c.title}`, `Board, ${c.project === 'WORK' ? 'Work' : 'Personal'}`, '#board/backlog'));
     } else if (key.startsWith('week:')) {
       const mon = key.slice(5), w = store.get<Week>(key), where = `Week of ${shortDate(mon)}`;
       Object.values(w.matrix).flat().forEach((x) => add(x.text, where, `#week/${mon}`));

@@ -43,3 +43,11 @@ export const shortDate = (s: string): string => {
   const d = fromIso(s);
   return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
 };
+
+/** Share of the calendar year that has passed by the end of `date`, as a whole percent (1 Jan is 1, 31 Dec is 100). */
+export const yearProgress = (date: string): number => {
+  const y = fromIso(date).getFullYear();
+  const start = `${y}-01-01`;
+  const total = diffDays(start, `${y + 1}-01-01`);
+  return Math.round(((diffDays(start, date) + 1) / total) * 100);
+};
