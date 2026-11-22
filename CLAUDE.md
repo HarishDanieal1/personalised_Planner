@@ -36,7 +36,7 @@ A change is done when `npm run check` passes. Add or update tests for any logic 
 
 - Source files: lowercase, one word where possible, kebab-case otherwise (`app-shell.ts`, not `AppShell.ts`). Tests: `<name>.test.ts` (unit), `<name>.spec.ts` (Playwright).
 - Supabase migrations follow the CLI convention `YYYYMMDDHHmmss_verb_description.sql` in UTC, for example `20261121190806_create_planner_docs_table.sql`. Use the real creation time; never rename a migration once it has been applied.
-- Store keys: `settings`, `board`, `reset`, `memory-ai`, `memory-user`, `day:YYYY-MM-DD`, `week:YYYY-MM-DD` (the Monday), `month:YYYY-MM`, `year:YYYY`. Keys must match `^[a-z0-9:-]{1,64}$` (enforced by the database).
+- Store keys: `settings`, `board`, `reset`, `day:YYYY-MM-DD`, `week:YYYY-MM-DD` (the Monday), `month:YYYY-MM`, `year:YYYY`. Keys must match `^[a-z0-9:-]{1,64}$` (enforced by the database).
 - Branches: `v0.0.x` for releases, `feature/<short-name>` or `fix/<short-name>` for work.
 
 ## Design

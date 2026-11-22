@@ -361,11 +361,3 @@
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); background: var(--pl-text); color: var(--pl-surface-solid); padding: 12px 18px; border-radius: 14px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; z-index: 200; max-width: min(560px, calc(100vw - 32px)); }
   .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 }
-
-@layer planner-app {
-  .memory-list { display: grid; gap: 10px; }
-  .memory-note { padding: 12px 14px; border: 1px solid var(--pl-border); border-radius: var(--pl-radius-control); background: var(--pl-surface-solid); }
-  .memory-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
-  .memory-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; }
-  .memory-actions { display: inline-flex; gap: 2px; }
-}
