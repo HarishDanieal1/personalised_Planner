@@ -24,6 +24,8 @@ export type Quadrant = 'q1' | 'q2' | 'q3' | 'q4';
 export interface Week { notes: string; matrix: Record<Quadrant, MatrixItem[]>; selfCare: string }
 export interface Goal { text: string; done: boolean }
 export interface Month { theme: string; goals: Goal[]; cells: Record<string, string> }
+export interface MemoryNote { id: string; text: string; by: 'me' | 'ai'; created: number; updated: number }
+export interface Memory { notes: MemoryNote[] }
 export interface Year { theme: string; goals: Goal[] }
 
 /** v0.0.2 board card, kept so older saved boards can be migrated. */

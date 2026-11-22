@@ -15,6 +15,7 @@ import { renderMonth } from '../pages/month';
 import { renderBoard } from '../pages/board';
 import { renderReset } from '../pages/reset';
 import { renderYear } from '../pages/year';
+import { renderMemory } from '../pages/memory';
 import { FINANCE_PAGES, renderFinance } from '../pages/finance';
 import { logo } from './logo';
 import { renderSettings } from '../pages/settings';
@@ -39,6 +40,10 @@ const NAV: NavEntry[] = [
     page('reset', 'Reset', 'self_improvement', () => renderReset())
   ] },
   page('board', 'Board', 'view_kanban', (p) => renderBoard(p)),
+  { group: 'memory', label: 'Memory', icon: 'bookmark', items: [
+    page('memory-ai', 'AI memory', 'smart_toy', () => renderMemory('ai')),
+    page('memory-user', 'User memory', 'person', () => renderMemory('user'))
+  ] },
   { group: 'financial', label: 'Financial', icon: 'account_balance_wallet', items: FINANCE_PAGES.flatMap((f, i) => [
     ...(f.section && f.section !== FINANCE_PAGES[i - 1]?.section ? [{ section: f.section }] : []),
     page(f.id, f.label, f.icon, () => renderFinance(f.id))

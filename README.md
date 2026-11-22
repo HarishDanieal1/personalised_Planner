@@ -6,7 +6,7 @@ It runs in the browser and installs as an app on Windows, macOS, Linux, Android 
 
 ## Pages
 
-Day, Week, Month, Year and Reset sit in the **Planner** group of the left navigation; the Financial pages have their own group. Groups collapse and expand.
+Day, Week, Month, Year and Reset sit in the **Planner** group of the left navigation; the Financial and Memory pages have their own groups. Groups collapse and expand.
 
 | Page | What it's for |
 | --- | --- |
@@ -18,6 +18,7 @@ Day, Week, Month, Year and Reset sit in the **Planner** group of the left naviga
 | Year | A theme and goals for the year, and all twelve months with each day shaded by its score. Click a day to open it. |
 | Reset | A days-steady count, a 10-minute urge reset with things to do instead, and a private log of when and why urges show up, including slips. |
 | Board | Jira-style, with Personal and Work as separate projects. Issues have a key (WORK-12), type, priority, story points, an assignee (you or the AI), labels, an epic, comments and a full change history. Plan sprints in the backlog, then work the sprint board. Day plans the AI makes are logged here too. |
+| Memory | Two note lists: AI memory (how the AI should work with you) and User memory (facts and preferences about you). Kept on your device and synced like everything else; never sent to Claude. |
 | Financial | Overview, spending, transactions, budget, recurring, categories, reports, investments, holdings, market watch, forecast and cash, with sample data for now. |
 | Settings | Account and sync, Claude, theme, trackers, habits and a data download. |
 

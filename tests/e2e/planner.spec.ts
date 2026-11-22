@@ -50,6 +50,45 @@ test('navigation reaches every page, with collapsible groups', async ({ page, is
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Budget');
   await expect(page.getByText('These are sample numbers')).toBeVisible();
   await shot(page, 'financial-budget');
+
+  // Memory is a group too, with two pages.
+  await open();
+  await page.locator('[data-group="memory"] .nav-group-toggle').click();
+  await page.locator('.sidenav a[data-page="memory-user"]').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('User memory');
+  await open();
+  await page.locator('.sidenav a[data-page="memory-ai"]').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('AI memory');
+});
+
+test('memory: add, keep, edit and delete a note', async ({ page }) => {
+  await page.goto('/#memory-ai');
+  await expect(page.getByText('No notes yet.')).toBeVisible();
+  await page.locator('#memory-new-ai textarea').fill('Plan deep work before noon');
+  await page.getByText('Add note', { exact: true }).click();
+  await expect(page.locator('.memory-note')).toHaveCount(1);
+  await expect(page.locator('.memory-note')).toContainText('Plan deep work before noon');
+
+  // Kept after a reload, and not shown on the other memory page.
+  await page.reload();
+  await expect(page.locator('.memory-note')).toHaveCount(1);
+  await page.goto('/#memory-user');
+  await expect(page.getByText('No notes yet.')).toBeVisible();
+  await page.goto('/#memory-ai');
+
+  await page.locator('.memory-note [aria-label="Edit note"]').click();
+  await page.locator('wa-dialog[open] textarea').fill('Plan deep work before 11');
+  await page.locator('wa-dialog[open]').getByText('Save note', { exact: true }).click();
+  await expect(page.locator('.memory-note')).toContainText('before 11');
+
+  // Delete needs a second, explicit choice.
+  await page.locator('.memory-note [aria-label="Delete note"]').click();
+  await page.locator('wa-dialog[open]').getByText('Keep it', { exact: true }).click();
+  await expect(page.locator('.memory-note')).toHaveCount(1);
+  await page.locator('.memory-note [aria-label="Delete note"]').click();
+  await page.locator('wa-dialog[open]').getByText('Delete note', { exact: true }).click();
+  await expect(page.locator('.memory-note')).toHaveCount(0);
+  await shot(page, 'memory');
 });
 
 test('the left navigation stays in place while the page scrolls', async ({ page, isMobile }) => {

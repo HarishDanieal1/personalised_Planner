@@ -41,7 +41,7 @@ export function nextTrackerSlot(used: number[]): number {
   return ((used.length) % 8) + 1;
 }
 
-/** Document keys: settings, board, reset, day:YYYY-MM-DD, week:YYYY-MM-DD (Monday), month:YYYY-MM, year:YYYY. */
+/** Document keys: settings, board, reset, memory-ai, memory-user, day:YYYY-MM-DD, week:YYYY-MM-DD (Monday), month:YYYY-MM, year:YYYY. */
 export function defaultFor(key: string): object {
   if (key.startsWith('day:')) return defaultDay();
   if (key.startsWith('week:')) return defaultWeek();
@@ -50,5 +50,6 @@ export function defaultFor(key: string): object {
   if (key === 'settings') return defaultSettings();
   if (key === 'board') return defaultBoard();
   if (key === 'reset') return defaultReset();
+  if (key === 'memory-ai' || key === 'memory-user') return { notes: [] };
   return {};
 }
