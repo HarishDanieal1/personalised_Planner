@@ -1,0 +1,96 @@
+/*
+  Planner design tokens.
+  Layout idea: a cloud-console workspace. White top bar, rectangular left navigation,
+  quiet grey canvas, white cards with hairline borders. One blue accent for actions
+  and the current page; chart colours come from the validated dataviz palette.
+*/
+@layer planner-tokens {
+  :root {
+    color-scheme: light;
+    --pl-canvas: #f8fafd;
+    --pl-surface: #ffffff;
+    --pl-surface-sunken: #f1f3f4;
+    --pl-border: #dadce0;
+    --pl-border-strong: #bdc1c6;
+    --pl-text: #1f1f1f;
+    --pl-text-2: #444746;
+    --pl-text-3: #5f6368;
+    --pl-accent: #0b57d0;
+    --pl-accent-soft: #e8f0fe;
+    --pl-accent-on-soft: #0842a0;
+    --pl-critical: #b3261e;
+    --pl-critical-soft: #fce8e6;
+    --pl-good: #146c2e;
+    --pl-focus: #0b57d0;
+
+    /* Chart palette (dataviz reference instance, light steps). */
+    --chart-surface: #ffffff;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --series-5: #e87ba4;
+    --series-6: #008300;
+    --series-7: #6250d6;
+    --series-8: #e34948;
+    --chart-critical: #d03b3b;
+
+    --pl-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --pl-topbar-h: 64px;
+    --pl-nav-w: 256px;
+    --pl-radius-card: 8px;
+    --pl-gap: 16px;
+
+    /* Web Awesome tokens, aligned to the above. */
+    --wa-font-family-body: var(--pl-font);
+    --wa-font-family-heading: var(--pl-font);
+    --wa-font-family-longform: var(--pl-font);
+    --wa-color-surface-default: var(--pl-surface);
+    --wa-color-surface-raised: var(--pl-surface);
+    --wa-color-surface-lowered: var(--pl-surface-sunken);
+    --wa-color-surface-border: var(--pl-border);
+    --wa-color-text-normal: var(--pl-text);
+    --wa-color-text-quiet: var(--pl-text-3);
+    --wa-color-brand-fill-loud: var(--pl-accent);
+    --wa-color-brand-border-loud: var(--pl-accent);
+    --wa-color-brand-on-normal: var(--pl-accent);
+    --wa-color-brand-fill-quiet: var(--pl-accent-soft);
+    --wa-color-brand-on-quiet: var(--pl-accent-on-soft);
+    --wa-form-control-border-color: var(--pl-border-strong);
+    --wa-form-control-border-radius: 4px;
+    --wa-form-control-activated-color: var(--pl-accent);
+    --wa-border-radius-m: 8px;
+    --wa-focus-ring-color: var(--pl-focus);
+  }
+
+  :root.wa-dark {
+    color-scheme: dark;
+    --pl-canvas: #1b1c1d;
+    --pl-surface: #232426;
+    --pl-surface-sunken: #2c2d30;
+    --pl-border: #3c4043;
+    --pl-border-strong: #5f6368;
+    --pl-text: #e3e3e3;
+    --pl-text-2: #c4c7c5;
+    --pl-text-3: #a8abaf;
+    --pl-accent: #a8c7fa;
+    --pl-accent-soft: #0e3a6e;
+    --pl-accent-on-soft: #d3e3fd;
+    --pl-critical: #f2b8b5;
+    --pl-critical-soft: #601410;
+    --pl-good: #6dd58c;
+    --pl-focus: #a8c7fa;
+
+    --chart-surface: #232426;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #0ca30c;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --chart-critical: #e66767;
+    --wa-color-brand-on-loud: #062e6f;
+  }
+}
